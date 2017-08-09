@@ -55,12 +55,12 @@ public class Clustering {
 			
 		}
 		
-//		Tree<ArrayList<Point>> tree = new Tree<ArrayList<Point>>();
+		ArrayList<Node> nodes = new ArrayList<Node>();
 		
 		for(int i = 0; i < tempPoints.size(); i++) {
 			double distMin = 200;
-			int closest = 0;
 			Point thisPoint = tempPoints.get(i);
+			Point closest = thisPoint;
 			for(int j = 0; j < tempPoints.size(); j++) {
 				int index = j;
 				if(j == i) j++;
@@ -69,11 +69,31 @@ public class Clustering {
 				double dist = Math.sqrt(Math.pow(thisPoint.x - thatPoint.x, 2) + Math.pow(thisPoint.y - thatPoint.y, 2));
 				if(dist < distMin) {
 					distMin = dist;
-					closest = thatPoint.id;
+					closest = thatPoint;
 				}
 				
 			}
 			
+			tempPoints.remove(thisPoint);
+			tempPoints.remove(closest);
+			
+			ArrayList<Point> pointsTree = new ArrayList<Point>();
+			pointsTree.add(thisPoint);
+			pointsTree.add(closest);
+			
+			double sumX = 0;
+			double sumY = 0;
+			for(Point p : pointsTree) {
+				sumX += p.x;
+				sumY += p.y;
+				
+			}
+			
+			Point avg = c.new Point(sumX / pointsTree.size(), sumY / pointsTree.size());
+			
+			Node node = new Node(pointsTree, pointsTree, avg);
+			
+			nodes.add(node);
 			
 		}
 		
@@ -103,17 +123,79 @@ public class Clustering {
 		
 	}
 	
-	private class Point {
+	public class Point {
+		double x = 0;
+		double y = 0;
+		int id = 0;
+		
 		public Point(double x, double y, int id) {
 			this.x = x;
 			this.y = y;
 			this.id = id;
 		}
-		double x = 0;
-		double y = 0;
-		int id = 0;
+		
+		public Point(double x, double y) {
+			this.x = x;
+			this.y = y;
+		}
+		
 	}
 	
-	
+	public static ArrayList<Node> group(ArrayList<Node> nodes) {
+		ArrayList<Node> tempNodes = new ArrayList<Node>();
+		for(int i = 0; i < nodes.size(); i++) {
+			tempNodes.add(nodes.get(i));
+			
+		}
+		
+		ArrayList<Node> nodesNew = new ArrayList<Node>();
+		
+		for(int i = 0; i < tempNodes.size(); i++) {
+			double distMin = 200;
+			Node thisNode = tempNodes.get(i);
+			Node closest = thisNode;
+			for(int j = 0; j < tempNodes.size(); j++) {
+				int index = j;
+				if(j == i) j++;
+				if(j == tempNodes.size()) index = 1;
+				Node thatNode = tempNodes.get(index);
+				double dist = Math.sqrt(Math.pow(thisNode.p.x - thatNode.p.x, 2) + Math.pow(thisNode.p.y - thatNode.p.y, 2));
+				if(dist < distMin) {
+					distMin = dist;
+					closest = thatNode;
+				}
+				
+			}
+			
+			tempNodes.remove(thisNode);
+			tempNodes.remove(closest);
+			
+			ArrayList<Node> nodeList = new ArrayList<Node>();
+			nodeList.add(thisNode);
+			nodeList.add(closest);
+			
+			double sumX = 0;
+			double sumY = 0;
+			for(Node n : nodeList) {
+				sumX += n.p.x;
+				sumY += n.p.y;
+				
+			}
+			
+			ArrayList<Point> nodePoints = new ArrayList<Point>();
+			nodePoints.addAll(thisNode.points);
+			nodePoints.addAll(closest.points);
+			
+			Point avg = c.new Point(sumX / nodeList.size(), sumY / nodeList.size());
+			
+			Node node = new Node(nodeList, nodePoints, avg);
+			
+			nodesNew.add(node);
+			
+		}
+		
+		return nodesNew;
+		
+	}
 	
 }
