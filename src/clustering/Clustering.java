@@ -1,5 +1,6 @@
 package clustering;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
@@ -62,9 +63,9 @@ public class Clustering {
 			Point thisPoint = tempPoints.get(i);
 			Point closest = thisPoint;
 			for(int j = 0; j < tempPoints.size(); j++) {
-				int index = j;
 				if(j == i) j++;
-				if(j == tempPoints.size()) index = 1;
+				int index = j;
+				if(j == tempPoints.size()) index = 0;
 				Point thatPoint = tempPoints.get(index);
 				double dist = Math.sqrt(Math.pow(thisPoint.x - thatPoint.x, 2) + Math.pow(thisPoint.y - thatPoint.y, 2));
 				if(dist < distMin) {
@@ -97,12 +98,27 @@ public class Clustering {
 			
 		}
 		
+		ArrayList<Node> tree = group(nodes, 2);
+		ArrayList<Color> colors = new ArrayList<Color>();
+		for(int i = 0; i < tree.size(); i++) {
+			colors.add(new Color((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
+		}
+		
+		System.out.println(tree.size());
 		GraphicsThread gt = new GraphicsThread() {
 			@Override
 			public void render(Graphics2D g2d) {
-				for(int i = 0; i < points.size(); i++) {
-					g2d.fillOval((int)(points.get(i).x * 10), (int)(points.get(i).y * 10), 5, 5);
+				int iterations = 0;
+				int pointsAmt = 0;
+				for(Node n : tree) {
+					g2d.setColor(colors.get(iterations));
+					for(Point p : n.points) {
+						g2d.fillOval((int)(p.x * 10), (int)(p.y * 10), 15, 15);
+						pointsAmt++;
+					}
+					iterations++;
 				}
+				System.out.println(pointsAmt);
 				
 			}
 
@@ -141,7 +157,7 @@ public class Clustering {
 		
 	}
 	
-	public static ArrayList<Node> group(ArrayList<Node> nodes) {
+	public static ArrayList<Node> group(ArrayList<Node> nodes, int iteration) {
 		ArrayList<Node> tempNodes = new ArrayList<Node>();
 		for(int i = 0; i < nodes.size(); i++) {
 			tempNodes.add(nodes.get(i));
@@ -151,13 +167,13 @@ public class Clustering {
 		ArrayList<Node> nodesNew = new ArrayList<Node>();
 		
 		for(int i = 0; i < tempNodes.size(); i++) {
-			double distMin = 200;
+			double distMin = 200000;
 			Node thisNode = tempNodes.get(i);
-			Node closest = thisNode;
+			Node closest = new Node(new ArrayList<Node>(), new ArrayList<Point>(), c.new Point(0, 0));
 			for(int j = 0; j < tempNodes.size(); j++) {
+				if(tempNodes.get(j) == tempNodes.get(i)) j++; 
 				int index = j;
-				if(j == i) j++;
-				if(j == tempNodes.size()) index = 1;
+				if(j == tempNodes.size()) index = 0;
 				Node thatNode = tempNodes.get(index);
 				double dist = Math.sqrt(Math.pow(thisNode.p.x - thatNode.p.x, 2) + Math.pow(thisNode.p.y - thatNode.p.y, 2));
 				if(dist < distMin) {
@@ -166,7 +182,6 @@ public class Clustering {
 				}
 				
 			}
-			
 			tempNodes.remove(thisNode);
 			tempNodes.remove(closest);
 			
@@ -181,10 +196,10 @@ public class Clustering {
 				sumY += n.p.y;
 				
 			}
-			
+
 			ArrayList<Point> nodePoints = new ArrayList<Point>();
-			nodePoints.addAll(thisNode.points);
-			nodePoints.addAll(closest.points);
+			for(Point p : thisNode.points) nodePoints.add(p);
+			for(Point p : closest.points) nodePoints.add(p);
 			
 			Point avg = c.new Point(sumX / nodeList.size(), sumY / nodeList.size());
 			
@@ -194,7 +209,8 @@ public class Clustering {
 			
 		}
 		
-		return nodesNew;
+		if(iteration > 0) return group(nodesNew, iteration - 1);
+		else return nodesNew;
 		
 	}
 	
